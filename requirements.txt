@@ -1,0 +1,8 @@
+torch
+# pytorch-cuda==11.7
+kafka-python
+sentence-transformers
+confluent-kafka
+python-dotenv
+coverage
+testcontainers
