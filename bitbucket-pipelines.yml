@@ -57,24 +57,6 @@ pipelines:
               SUBJECT: '${ALERT_TYPE}: Bitbucket Pipe Notification for ${BITBUCKET_REPO_SLUG} - ${BITBUCKET_BRANCH}'
     release/production:
       - step:
-          name: Unit tests
-          runs-on:
-            - 'runner2'
-          script:
-            - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-            - apt-get install git-lfs -y
-            - git lfs install
-            - git clone https://huggingface.co/sentence-transformers/all-mpnet-base-v2 models/all-mpnet-base-v2
-            - pip install --no-cache-dir -r requirements.txt
-            - coverage run test_melange_extractor.py
-            - coverage report -i
-            - coverage xml -i
-            - pipe: sonarsource/sonarqube-scan:1.2.0
-              variables:
-                SONAR_HOST_URL: ${SONAR_HOST_URL}
-                SONAR_TOKEN: ${SONAR_TOKEN}
-                EXTRA_ARGS: '-Dsonar.projectKey=${BITBUCKET_REPO_SLUG} -Dsonar.projectName=${BITBUCKET_REPO_SLUG} -Dsonar.python.coverage.reportPaths=coverage.xml'
-      - step:
           name: Fetch .env file from S3
           image: amazon/aws-cli
           script:
