@@ -1,4 +1,4 @@
-from confluent_kafka import Producer,Consumer
+from confluent_kafka import Producer,Consumer,KafkaError
 import json
 import melange_extractor
 from dotenv import dotenv_values
