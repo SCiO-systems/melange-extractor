@@ -1,0 +1,93 @@
+image: python:3.10-bullseye
+
+pipelines:
+  branches:
+    release/development:
+      - step:
+          name: Unit tests
+          runs-on:
+            - 'runner2'
+          script:
+            - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+            - apt-get install git-lfs -y
+            - git lfs install
+            - git clone https://huggingface.co/sentence-transformers/all-mpnet-base-v2 models/all-mpnet-base-v2
+            - pip install --no-cache-dir -r requirements.txt
+            - coverage run test_melange_extractor.py
+            - coverage report -i
+            - coverage xml -i
+            - pipe: sonarsource/sonarqube-scan:1.2.0
+              variables:
+                SONAR_HOST_URL: ${SONAR_HOST_URL}
+                SONAR_TOKEN: ${SONAR_TOKEN}
+                EXTRA_ARGS: '-Dsonar.projectKey=${BITBUCKET_REPO_SLUG} -Dsonar.projectName=${BITBUCKET_REPO_SLUG} -Dsonar.python.coverage.reportPaths=coverage.xml'
+      - step:
+          name: Fetch .env file from S3
+          image: amazon/aws-cli
+          script:
+            - aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+            - aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+            - aws configure set default.region ${AWS_REGION}
+            - aws s3 cp s3://scio-project-envs/python/${BITBUCKET_REPO_SLUG}/dev.env .env
+          artifacts:
+            - .env
+      - step:
+          name: Building & pushing Docker image
+          runs-on:
+            - 'runner2'
+          services:
+            - docker
+          script:
+            - docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
+            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev
+            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev
+      - step:
+          name: "E-mail notification"
+          script:
+          - ALERT_TYPE="SUCCESS"
+          - if [[ $BITBUCKET_EXIT_CODE -ne 0 ]]; then ALERT_TYPE="FAIL"; fi
+          - pipe: atlassian/email-notify:0.9.0
+            variables:
+              USERNAME: ${SMTP_USERNAME}
+              PASSWORD: ${SMTP_PASSWORD}
+              HOST: ${SMTP_HOST}
+              PORT: ${SMTP_PORT}
+              FROM: "devops@scio.systems"
+              TO: "dev@scio.systems"
+              SUBJECT: '${ALERT_TYPE}: Bitbucket Pipe Notification for ${BITBUCKET_REPO_SLUG} - ${BITBUCKET_BRANCH}'
+    release/production:
+      - step:
+          name: Fetch .env file from S3
+          image: amazon/aws-cli
+          script:
+            - aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+            - aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+            - aws configure set default.region ${AWS_REGION}
+            - aws s3 cp s3://scio-project-envs/python/${BITBUCKET_REPO_SLUG}/prod.env .env
+          artifacts:
+            - .env
+      - step:
+          name: Building & pushing Docker image
+          runs-on:
+            - 'runner2'
+          services:
+            - docker
+          script:
+            - docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
+            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}
+            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}
+      - step:
+          name: "E-mail notification"
+          script:
+          - ALERT_TYPE="SUCCESS"
+          - if [[ $BITBUCKET_EXIT_CODE -ne 0 ]]; then ALERT_TYPE="FAIL"; fi
+          - pipe: atlassian/email-notify:0.9.0
+            variables:
+              USERNAME: ${SMTP_USERNAME}
+              PASSWORD: ${SMTP_PASSWORD}
+              HOST: ${SMTP_HOST}
+              PORT: ${SMTP_PORT}
+              FROM: "devops@scio.systems"
+              TO: "dev@scio.systems"
+              SUBJECT: '${ALERT_TYPE}: Bitbucket Pipe Notification for ${BITBUCKET_REPO_SLUG} - ${BITBUCKET_BRANCH}'
+            

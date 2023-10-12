@@ -1,6 +1,6 @@
 from confluent_kafka import Producer,Consumer
 import json
-import my_summarizer
+import melange_extractor
 from dotenv import dotenv_values
 
 config = dotenv_values(".env")  # config = {"USER": "foo", "EMAIL": "foo@example.org"}
@@ -15,7 +15,7 @@ def consume_messages():
 
     config = {
         'bootstrap.servers': bootstrap_server,
-        'group.id': 'angelos',
+        'group.id': 'some_group',
         'auto.offset.reset': 'earliest'}
     # Create Consumer instance
 
@@ -52,35 +52,36 @@ def consume_messages():
                     print("Consumed event to topic {topic}: key = {key:12} value = {value:12}".format(
                         topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
 
-                    
-                    summarizer = my_summarizer.CiGi_Summarizer(msg.value())
-                    summarizer.digest_input()
-                    summarizer.initialize_summarizer()
-                    summarizer.summarize()
-                    summarizer_output = json.dumps(summarizer.output_data())
-                    #
-                    #
-                    # config = {
-                    #     'bootstrap.servers': bootstrap_server  # 'bootstrap.servers': 'localhost:9092'
-                    # }
-                    # producer = Producer(config)
-                    #
-                    # def delivery_callback(err, msg):
-                    #     if err:
-                    #         print('ERROR: Message failed delivery: {}'.format(err))
-                    #         print("Failed to deliver message: %s" % (str(msg)))
-                    #     else:
-                    #         if msg.value() == None:
-                    #             print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
-                    #                 topic=msg.topic(), key=msg.key().decode('utf-8'), value=""))
-                    #         else:
-                    #             print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
-                    #                 topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
-                    #
-                    #
-                    # # Produce data by selecting random values from these lists.
-                    # producer_key = "a key"
-                    # producer.produce(producer_topic, key=producer_key, value=json.dumps(summarizer_output), callback=delivery_callback)
+                    input_msg = json.loads(msg.value())
+                    embedder = melange_extractor.CiGi_Embedder(sample_json)
+                    embedder.digest_input()
+                    embedder.initialize_embedder()
+                    embedder.embed()
+                    embedder_output = json.dumps(embedder.output_data)
+
+                    config = {
+                        'bootstrap.servers': bootstrap_server  # 'bootstrap.servers': 'localhost:9092'
+                    }
+                    producer = Producer(config)
+
+                    def delivery_callback(err, msg):
+                        if err:
+                            print('ERROR: Message failed delivery: {}'.format(err))
+                            print("Failed to deliver message: %s" % (str(msg)))
+                        else:
+                            if msg.value() == None:
+                                print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
+                                    topic=msg.topic(), key=msg.key().decode('utf-8'), value=""))
+                            else:
+                                print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
+                                    topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
+
+
+                    # Produce data by selecting random values from these lists.
+                    producer_key = input_msg["metadata_id"]
+                    producer.produce(producer_topic, key=producer_key, value=embedder_output, callback=delivery_callback)
+
+                    producer.flush()
 
     except Exception as e:
         print(e)

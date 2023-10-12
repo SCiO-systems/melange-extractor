@@ -1,0 +1,7 @@
+torch
+kafka-python
+sentence-transformers
+confluent-kafka
+python-dotenv
+coverage
+testcontainers
