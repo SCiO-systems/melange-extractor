@@ -47,7 +47,7 @@ pipelines:
           deployment: dev
           script:            
             - git clone https://x-token-auth:${SCIOCORE_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/qvantum-eks-configs.git && cd qvantum-eks-configs
-            - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${RELEASE_VERSION}-${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/dev/deployment.yml
+            - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/dev/deployment.yml
             - git add .
             - git config --global user.email "devops@scio.systems"
             - git config --global user.name "scio"
