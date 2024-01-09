@@ -39,8 +39,20 @@ pipelines:
             - docker
           script:
             - docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
-            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev
-            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev
+            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${BITBUCKET_COMMIT::7}
+            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${BITBUCKET_COMMIT::7}
+      - step:
+          name: "Deployment (dev)"
+          image: atlassian/default-image:4
+          deployment: dev
+          script:            
+            - git clone https://x-token-auth:${SCIOCORE_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/qvantum-eks-configs.git && cd qvantum-eks-configs
+            - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${RELEASE_VERSION}-${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/dev/deployment.yml
+            - git add .
+            - git config --global user.email "devops@scio.systems"
+            - git config --global user.name "scio"
+            - git commit -m "Updated image for ${BITBUCKET_REPO_SLUG}/dev/deployment.yml"
+            - git push origin master
       - step:
           name: "E-mail notification"
           script:
@@ -74,8 +86,20 @@ pipelines:
             - docker
           script:
             - docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
-            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}
-            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}
+            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:${BITBUCKET_COMMIT::7}
+            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:${BITBUCKET_COMMIT::7}
+      - step:
+          name: "Deployment (prod)"
+          image: atlassian/default-image:4
+          deployment: prod
+          script:            
+            - git clone https://x-token-auth:${SCIOCORE_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/qvantum-eks-configs.git && cd qvantum-eks-configs
+            - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/prod/deployment.yml
+            - git add .
+            - git config --global user.email "devops@scio.systems"
+            - git config --global user.name "scio"
+            - git commit -m "Updated image for ${BITBUCKET_REPO_SLUG}/prod/deployment.yml"
+            - git push origin master
       - step:
           name: "E-mail notification"
           script:
