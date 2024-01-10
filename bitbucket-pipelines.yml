@@ -46,7 +46,7 @@ pipelines:
           image: atlassian/default-image:4
           deployment: dev
           script:            
-            - git clone https://x-token-auth:${SCIOCORE_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${SCIOCORE_MANIFESTS_REPO}.git && cd ${SCIOCORE_MANIFESTS_REPO}
+            - git clone https://x-token-auth:${QVANTUM_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${QVANTUM_MANIFESTS_REPO}.git && cd ${QVANTUM_MANIFESTS_REPO}
             - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/dev/deployment.yml
             - git add .
             - git config --global user.email "devops@scio.systems"
@@ -93,7 +93,7 @@ pipelines:
           image: atlassian/default-image:4
           deployment: prod
           script:            
-            - git clone https://x-token-auth:${SCIOCORE_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${SCIOCORE_MANIFESTS_REPO}.git && cd ${SCIOCORE_MANIFESTS_REPO}
+            - git clone https://x-token-auth:${QVANTUM_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${QVANTUM_MANIFESTS_REPO}.git && cd ${QVANTUM_MANIFESTS_REPO}
             - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/prod/deployment.yml
             - git add .
             - git config --global user.email "devops@scio.systems"
