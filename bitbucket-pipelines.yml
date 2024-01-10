@@ -52,7 +52,7 @@ pipelines:
             - git config --global user.email "devops@scio.systems"
             - git config --global user.name "scio"
             - git commit -m "Updated image for ${BITBUCKET_REPO_SLUG}/dev/deployment.yml"
-            - git push origin master
+            - git push origin main
       - step:
           name: "E-mail notification"
           script:
@@ -99,7 +99,7 @@ pipelines:
             - git config --global user.email "devops@scio.systems"
             - git config --global user.name "scio"
             - git commit -m "Updated image for ${BITBUCKET_REPO_SLUG}/prod/deployment.yml"
-            - git push origin master
+            - git push origin main
       - step:
           name: "E-mail notification"
           script:
