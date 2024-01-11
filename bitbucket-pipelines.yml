@@ -16,11 +16,6 @@ pipelines:
             - coverage run test_melange_extractor.py
             - coverage report -i
             - coverage xml -i
-            - pipe: sonarsource/sonarqube-scan:1.2.0
-              variables:
-                SONAR_HOST_URL: ${SONAR_HOST_URL}
-                SONAR_TOKEN: ${SONAR_TOKEN}
-                EXTRA_ARGS: '-Dsonar.projectKey=${BITBUCKET_REPO_SLUG} -Dsonar.projectName=${BITBUCKET_REPO_SLUG} -Dsonar.python.coverage.reportPaths=coverage.xml'
       - step:
           name: Fetch .env file from S3
           image: amazon/aws-cli
@@ -31,6 +26,16 @@ pipelines:
             - aws s3 cp s3://scio-project-envs/python/${BITBUCKET_REPO_SLUG}/dev.env .env
           artifacts:
             - .env
+      - step:
+          name: Code review
+          runs-on:
+            - 'self.hosted'
+          size: 2x
+          image: jetbrains/qodana-python
+          script:
+            - qodana --results-dir=${BITBUCKET_CLONE_DIR}/.qodana --report-dir=${BITBUCKET_CLONE_DIR}/.qodana/report --coverage-dir=${BITBUCKET_CLONE_DIR}
+          artifacts:
+            - .qodana/report  
       - step:
           name: Building & pushing Docker image
           runs-on:
@@ -46,7 +51,7 @@ pipelines:
           image: atlassian/default-image:4
           deployment: dev
           script:            
-            - git clone https://x-token-auth:${QVANTUM_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${QVANTUM_MANIFESTS_REPO}.git && cd ${QVANTUM_MANIFESTS_REPO}
+            - git clone https://x-token-auth:${SCIOCORE_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${SCIOCORE_MANIFESTS_REPO}.git && cd ${SCIOCORE_MANIFESTS_REPO}
             - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/dev/deployment.yml
             - git add .
             - git config --global user.email "devops@scio.systems"
@@ -93,7 +98,7 @@ pipelines:
           image: atlassian/default-image:4
           deployment: prod
           script:            
-            - git clone https://x-token-auth:${QVANTUM_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${QVANTUM_MANIFESTS_REPO}.git && cd ${QVANTUM_MANIFESTS_REPO}
+            - git clone https://x-token-auth:${SCIOCORE_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${SCIOCORE_MANIFESTS_REPO}.git && cd ${SCIOCORE_MANIFESTS_REPO}
             - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/prod/deployment.yml
             - git add .
             - git config --global user.email "devops@scio.systems"
