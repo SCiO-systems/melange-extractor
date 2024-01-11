@@ -1,7 +1,7 @@
-torch
-kafka-python
-sentence-transformers
-confluent-kafka
-python-dotenv
-coverage
-testcontainers
+torch==2.1.2
+kafka-python==2.0.2
+sentence-transformers==2.2.2
+confluent-kafka==2.3.0
+python-dotenv==1.0.0
+coverage==7.4.0
+testcontainers==3.7.1
