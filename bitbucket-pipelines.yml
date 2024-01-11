@@ -1,4 +1,4 @@
-image: python:3.11-bullseye
+image: python:3.10-bullseye
 
 pipelines:
   branches:
@@ -7,7 +7,11 @@ pipelines:
           name: Unit tests
           runs-on:
             - 'runner2'
+          size: 2x
+          services:
+            - docker
           script:
+            - export TESTCONTAINERS_RYUK_DISABLED=true
             - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
             - apt-get install git-lfs -y
             - git lfs install
@@ -119,4 +123,10 @@ pipelines:
               FROM: "devops@scio.systems"
               TO: "dev@scio.systems"
               SUBJECT: '${ALERT_TYPE}: Bitbucket Pipe Notification for ${BITBUCKET_REPO_SLUG} - ${BITBUCKET_BRANCH}'
+
+definitions:
+  services:
+    docker:
+      memory: 6144
+      type: docker
             
