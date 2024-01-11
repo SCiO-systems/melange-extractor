@@ -26,16 +26,16 @@ pipelines:
             - aws s3 cp s3://scio-project-envs/python/${BITBUCKET_REPO_SLUG}/dev.env .env
           artifacts:
             - .env
-      - step:
-          name: Code review
-          runs-on:
-            - 'self.hosted'
-          size: 2x
-          image: jetbrains/qodana-python
-          script:
-            - qodana --results-dir=${BITBUCKET_CLONE_DIR}/.qodana --report-dir=${BITBUCKET_CLONE_DIR}/.qodana/report --coverage-dir=${BITBUCKET_CLONE_DIR}
-          artifacts:
-            - .qodana/report  
+      # - step:
+      #     name: Code review
+      #     runs-on:
+      #       - 'self.hosted'
+      #     size: 2x
+      #     image: jetbrains/qodana-python
+      #     script:
+      #       - qodana --results-dir=${BITBUCKET_CLONE_DIR}/.qodana --report-dir=${BITBUCKET_CLONE_DIR}/.qodana/report --coverage-dir=${BITBUCKET_CLONE_DIR}
+      #     artifacts:
+      #       - .qodana/report  
       - step:
           name: Building & pushing Docker image
           runs-on:
