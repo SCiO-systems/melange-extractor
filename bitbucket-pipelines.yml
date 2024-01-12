@@ -7,7 +7,6 @@ pipelines:
           name: Unit tests
           runs-on:
             - 'runner2'
-          size: 2x
           services:
             - docker
           script:
@@ -36,7 +35,6 @@ pipelines:
           name: Code review
           runs-on:
             - 'self.hosted'
-          size: 2x
           image: jetbrains/qodana-python
           script:
             - qodana --results-dir=${BITBUCKET_CLONE_DIR}/.qodana --report-dir=${BITBUCKET_CLONE_DIR}/.qodana/report --coverage-dir=${BITBUCKET_CLONE_DIR}
@@ -48,7 +46,7 @@ pipelines:
             - 'runner2'
           size: 2x
           services:
-            - docker
+            - docker-build
           script:
             - docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
             - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${BITBUCKET_COMMIT::7}
@@ -96,7 +94,7 @@ pipelines:
             - 'runner2'
           size: 2x
           services:
-            - docker
+            - docker-build
           script:
             - docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
             - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:${BITBUCKET_COMMIT::7}
@@ -130,7 +128,8 @@ pipelines:
 
 definitions:
   services:
-    docker:
+    docker-build:
       memory: 6144
       type: docker
-            
+    docker:
+      memory: 2048
