@@ -76,7 +76,7 @@ class CiGi_Embedder():
 
     def embed(self):
         try:
-            embeddings = self.model.encode(self.consumed_data["text"]).tolist()
+            embeddings = self.model.encode(self.consumed_data["text"], normalize_embeddings=True).tolist()
         except Exception as e:
             return e
         self.output_data = copy.deepcopy(self.consumed_data)
