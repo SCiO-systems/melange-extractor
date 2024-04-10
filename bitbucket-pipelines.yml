@@ -7,7 +7,10 @@ pipelines:
           name: Unit tests
           runs-on:
             - 'runner2'
+          services:
+            - docker
           script:
+            - export TESTCONTAINERS_RYUK_DISABLED=true
             - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
             - apt-get install git-lfs -y
             - git lfs install
@@ -16,11 +19,8 @@ pipelines:
             - coverage run test_melange_extractor.py
             - coverage report -i
             - coverage xml -i
-            - pipe: sonarsource/sonarqube-scan:1.2.0
-              variables:
-                SONAR_HOST_URL: ${SONAR_HOST_URL}
-                SONAR_TOKEN: ${SONAR_TOKEN}
-                EXTRA_ARGS: '-Dsonar.projectKey=${BITBUCKET_REPO_SLUG} -Dsonar.projectName=${BITBUCKET_REPO_SLUG} -Dsonar.python.coverage.reportPaths=coverage.xml'
+          artifacts:
+            - coverage.xml
       - step:
           name: Fetch .env file from S3
           image: amazon/aws-cli
@@ -28,19 +28,41 @@ pipelines:
             - aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
             - aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
             - aws configure set default.region ${AWS_REGION}
-            - aws s3 cp s3://scio-project-envs/python/${BITBUCKET_REPO_SLUG}/dev.env .env
+            - aws s3 cp s3://${ENVS}/${BITBUCKET_REPO_SLUG}/dev.env .env
           artifacts:
             - .env
+      - step:
+          name: Code review
+          runs-on:
+            - 'self.hosted'
+          image: jetbrains/qodana-python
+          script:
+            - qodana --results-dir=${BITBUCKET_CLONE_DIR}/.qodana --report-dir=${BITBUCKET_CLONE_DIR}/.qodana/report --coverage-dir=${BITBUCKET_CLONE_DIR}
+          artifacts:
+            - .qodana/report  
       - step:
           name: Building & pushing Docker image
           runs-on:
             - 'runner2'
+          size: 2x
           services:
-            - docker
+            - docker-build
           script:
             - docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
-            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev
-            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev
+            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${BITBUCKET_COMMIT::7}
+            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${BITBUCKET_COMMIT::7}
+      - step:
+          name: "Deployment (dev)"
+          image: atlassian/default-image:4
+          deployment: dev
+          script:            
+            - git clone https://x-token-auth:${SCIOCORE_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${SCIOCORE_MANIFESTS_REPO}.git && cd ${SCIOCORE_MANIFESTS_REPO}
+            - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:dev-${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/dev/deployment.yml
+            - git add .
+            - git config --global user.email "devops@scio.systems"
+            - git config --global user.name "scio"
+            - git commit -m "Updated image for ${BITBUCKET_REPO_SLUG}/dev/deployment.yml"
+            - git push origin main
       - step:
           name: "E-mail notification"
           script:
@@ -63,19 +85,32 @@ pipelines:
             - aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
             - aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
             - aws configure set default.region ${AWS_REGION}
-            - aws s3 cp s3://scio-project-envs/python/${BITBUCKET_REPO_SLUG}/prod.env .env
+            - aws s3 cp s3://${ENVS}/${BITBUCKET_REPO_SLUG}/prod.env .env
           artifacts:
             - .env
       - step:
           name: Building & pushing Docker image
           runs-on:
             - 'runner2'
+          size: 2x
           services:
-            - docker
+            - docker-build
           script:
             - docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
-            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}
-            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}
+            - docker build . -t ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:${BITBUCKET_COMMIT::7}
+            - docker push ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:${BITBUCKET_COMMIT::7}
+      - step:
+          name: "Deployment (prod)"
+          image: atlassian/default-image:4
+          deployment: prod
+          script:            
+            - git clone https://x-token-auth:${SCIOCORE_MANIFESTS_REPO_ACCESS_TOKEN}@bitbucket.org/sciocore/${SCIOCORE_MANIFESTS_REPO}.git && cd ${SCIOCORE_MANIFESTS_REPO}
+            - sed -i "s|image:.*|image:\ ${DOCKERHUB_USERNAME}/${BITBUCKET_REPO_SLUG}:${BITBUCKET_COMMIT::7}|" apps/${BITBUCKET_REPO_SLUG}/prod/deployment.yml
+            - git add .
+            - git config --global user.email "devops@scio.systems"
+            - git config --global user.name "scio"
+            - git commit -m "Updated image for ${BITBUCKET_REPO_SLUG}/prod/deployment.yml"
+            - git push origin main
       - step:
           name: "E-mail notification"
           script:
@@ -90,4 +125,11 @@ pipelines:
               FROM: "devops@scio.systems"
               TO: "dev@scio.systems"
               SUBJECT: '${ALERT_TYPE}: Bitbucket Pipe Notification for ${BITBUCKET_REPO_SLUG} - ${BITBUCKET_BRANCH}'
-            
+
+definitions:
+  services:
+    docker-build:
+      memory: 6144
+      type: docker
+    docker:
+      memory: 2048

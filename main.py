@@ -53,7 +53,7 @@ def consume_messages():
                         topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
 
                     input_msg = json.loads(msg.value())
-                    embedder = melange_extractor.CiGi_Embedder(sample_json)
+                    embedder = melange_extractor.CiGi_Embedder(input_msg)
                     embedder.digest_input()
                     embedder.initialize_embedder()
                     embedder.embed()
