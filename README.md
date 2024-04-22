@@ -19,12 +19,8 @@ In order to run the Docker image, you must have NVIDIA Container Toolkit install
 
 ##### Dev
 
-`docker pull sciohub/melange-extractor:dev`
-
-`docker run --rm --name melange-extractor --gpus all sciohub/melange-extractor:dev`
+`docker run -d --name melange-extractor --gpus all --restart unless-stopped --pull always sciohub/melange-extractor:dev`
 
 ##### Prod
 
-`docker pull sciohub/melange-extractor:prod`
-
-`docker run --rm --name melange-extractor --gpus all sciohub/melange-extractor:prod`
+`docker run -d --name melange-extractor --gpus all --restart unless-stopped --pull always sciohub/melange-extractor:prod`
