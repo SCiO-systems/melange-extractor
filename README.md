@@ -18,4 +18,5 @@ For coverage report:
 In order to run the Docker image, you must have NVIDIA Container Toolkit installed both on the host and the container runtime (https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
 
 `docker pull sciohub/melange-extractor`
+
 `docker run --rm --name melange-extractor --gpus all sciohub/melange-extractor`
