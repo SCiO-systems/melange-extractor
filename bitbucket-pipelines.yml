@@ -7,8 +7,6 @@ pipelines:
           name: Unit tests
           runs-on:
             - 'runner2'
-          services:
-            - docker
           script:
             - export TESTCONTAINERS_RYUK_DISABLED=true
             - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
@@ -34,7 +32,8 @@ pipelines:
       - step:
           name: Code review
           runs-on:
-            - 'self.hosted'
+            - 'runner2'
+          size: 2x
           image: jetbrains/qodana-python
           script:
             - qodana --results-dir=${BITBUCKET_CLONE_DIR}/.qodana --report-dir=${BITBUCKET_CLONE_DIR}/.qodana/report --coverage-dir=${BITBUCKET_CLONE_DIR}
@@ -140,5 +139,3 @@ definitions:
     docker-build:
       memory: 6144
       type: docker
-    docker:
-      memory: 2048
