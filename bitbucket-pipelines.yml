@@ -59,29 +59,29 @@ pipelines:
             - 'runner2'
           deployment: dev
           script:           
-          # - pipe: atlassian/scp-deploy:1.4.1
-          #   variables:
-          #     USER: ${DEFAULT_SSH_USER}
-          #     SERVER: ${HOST}
-          #     SSH_KEY: ${DEFAULT_SSH_KEY}
-          #     REMOTE_PATH: '/home/${DEFAULT_SSH_USER}'
-          #     LOCAL_PATH: 'docker-compose.yml'
-          #     EXTRA_ARGS: ["-P", "${DEFAULT_SSH_PORT}", "-o", "StrictHostKeyChecking=no"]
-          #     DEBUG: 'true'
+          - pipe: atlassian/scp-deploy:1.4.1
+            variables:
+              USER: ${DEFAULT_SSH_USER}
+              SERVER: ${HOST}
+              SSH_KEY: ${DEFAULT_SSH_KEY}
+              REMOTE_PATH: '/home/${DEFAULT_SSH_USER}'
+              LOCAL_PATH: 'docker-compose.yaml'
+              EXTRA_ARGS: ["-P", "${DEFAULT_SSH_PORT}", "-o", "StrictHostKeyChecking=no"]
+              DEBUG: 'true'
           - pipe: atlassian/ssh-run:0.5.0
             variables:
               SSH_USER: ${DEFAULT_SSH_USER}
               SERVER: ${HOST}
               PORT: ${DEFAULT_SSH_PORT}
               SSH_KEY: ${DEFAULT_SSH_KEY}
-              MODE: 'command'
-              COMMAND: 'whoami'
-              # ENV_VARS: >-
-              #   ENV=prod
-              #   DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}
-              #   DOCKERHUB_PASSWORD=${DOCKERHUB_PASSWORD}
-              #   BITBUCKET_REPO_SLUG=${BITBUCKET_REPO_SLUG}
-              #   DEFAULT_SSH_USER=${DEFAULT_SSH_USER}       
+              MODE: 'script'
+              COMMAND: 'deploy.sh'
+              ENV_VARS: >-
+                ENV=dev
+                DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}
+                DOCKERHUB_PASSWORD=${DOCKERHUB_PASSWORD}
+                BITBUCKET_REPO_SLUG=${BITBUCKET_REPO_SLUG}
+                DEFAULT_SSH_USER=${DEFAULT_SSH_USER}       
       - step:
           name: "E-mail notification"
           script:
