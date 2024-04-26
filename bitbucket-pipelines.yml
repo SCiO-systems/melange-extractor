@@ -142,4 +142,4 @@ definitions:
       memory: 6144
       type: docker
     docker:
-      memory: 2048
+      memory: 3072
