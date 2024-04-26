@@ -1,0 +1,12 @@
+services:
+  melange-extractor:
+    image: sciohub/melange-extractor:${ENV}
+    container_name: melange-extractor
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
