@@ -7,6 +7,8 @@ pipelines:
           name: Unit tests
           runs-on:
             - 'runner2'
+          services: 
+            - docker
           script:
             - export TESTCONTAINERS_RYUK_DISABLED=true
             - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
@@ -139,3 +141,5 @@ definitions:
     docker-build:
       memory: 6144
       type: docker
+    docker:
+      memory: 2048
