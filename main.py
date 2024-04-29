@@ -47,10 +47,11 @@ def consume_messages():
                 # Extract the (optional) key and value, and print.
                 if msg.value() == None:
                     #print("Consumed event to topic {topic}: key = {key:12} value = {value:12}".format(
-                        topic=msg.topic(), key=msg.key().decode('utf-8'), value=""))
+                    #    topic=msg.topic(), key=msg.key().decode('utf-8'), value=""))
+                    pass
                 else:
                     #print("Consumed event to topic {topic}: key = {key:12} value = {value:12}".format(
-                        topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
+                    #    topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
 
                     input_msg = json.loads(msg.value())
                     embedder = melange_extractor.CiGi_Embedder(input_msg)
@@ -68,13 +69,13 @@ def consume_messages():
                         if err:
                             print('ERROR: Message failed delivery: {}'.format(err))
                             print("Failed to deliver message: %s" % (str(msg)))
-                        else:
-                            if msg.value() == None:
-                                #print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
-                                    topic=msg.topic(), key=msg.key().decode('utf-8'), value=""))
-                            else:
-                                #print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
-                                    topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
+#                         else:
+#                             if msg.value() == None:
+#                                 print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
+#                                     topic=msg.topic(), key=msg.key().decode('utf-8'), value=""))
+#                             else:
+#                                 print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
+#                                     topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
 
 
                     # Produce data by selecting random values from these lists.
