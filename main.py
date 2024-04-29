@@ -36,10 +36,10 @@ def consume_messages():
                 continue
             elif msg.error():
                 if msg.error().code() == KafkaError._PARTITION_EOF:
-                    #print("Error partition")
+                    print("Error partition")
                     continue
                 else:
-                    #print(f"Error while consuming message: {msg.error()}")
+                    print(f"Error while consuming message: {msg.error()}")
                     break
                 print("ERROR: %s".format(msg.error()))
             else:
@@ -66,8 +66,8 @@ def consume_messages():
 
                     def delivery_callback(err, msg):
                         if err:
-                            #print('ERROR: Message failed delivery: {}'.format(err))
-                            #print("Failed to deliver message: %s" % (str(msg)))
+                            print('ERROR: Message failed delivery: {}'.format(err))
+                            print("Failed to deliver message: %s" % (str(msg)))
                         else:
                             if msg.value() == None:
                                 #print("Produced event to topic {topic}: key = {key:12} value = {value:12}".format(
@@ -84,7 +84,7 @@ def consume_messages():
                     producer.flush()
 
     except Exception as e:
-        #print(e)
+        print(e)
     finally:
         # Leave group and commit final offsets
         consumer.close()
